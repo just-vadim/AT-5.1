@@ -3,10 +3,13 @@ package ru.netology.appcarddelivery;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
+import ru.netology.util.SubmitByNamePhone;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -14,9 +17,11 @@ import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openqa.selenium.Keys.chord;
-import static ru.netology.util.DateGenerator.generateDate;
+import static ru.netology.util.DataGenerator.*;
 
 public class AppCardDeliveryV2Test {
+
+    SubmitByNamePhone submitData = generateByNamePhone();
 
     private SelenideElement dateForm = $("[data-test-id='date'] .input__control");
 
@@ -32,12 +37,12 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldSubmitRequest() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldSubmitRequest() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
         String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
         String text = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 ).getText();
