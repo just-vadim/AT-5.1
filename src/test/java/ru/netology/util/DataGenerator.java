@@ -6,8 +6,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ public class DataGenerator {
         ArrayList<String> citiesList = new ArrayList<>();
         Random random = new Random();
         String filePath = "./src/test/resources/cities.json";
-        FileReader reader = new FileReader(filePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF-8"));
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(reader);
         JSONArray cities = (JSONArray) jsonObject.get("city");
@@ -30,8 +29,7 @@ public class DataGenerator {
             citiesList.add(cities.get(i).toString());
         }
 
-        String randomCity = citiesList.get(random.nextInt(citiesList.size()));
-        return randomCity;
+        return citiesList.get(random.nextInt(citiesList.size()));
     }
 
     /* Метод генерирует случайную дату в диапазоне от +3 до +30 дней от сегодняшней даты */

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,176 +46,164 @@ public class AppCardDeliveryV2Test {
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 ).getText();
-        assertEquals("Встреча успешно запланирована на " + selectedDate, text.trim());
+        SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
+        successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
     }
 
     @Test
     void shouldNotSubmitIfEmptyCity() {
         inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='city']").$(".input__sub").getText();
-        assertEquals("Поле обязательно для заполнения", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='city']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Поле обязательно для заполнения"));
     }
+
     @Test
-    void shouldNotSubmitIfEmptyDate() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfEmptyDate() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
-        dateForm.setValue(generateDate());
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $("[data-test-id='date']").$(".input_invalid").$(".input__sub").getText();
-        assertEquals("Неверно введена дата", text.trim());
+        SelenideElement errorMsg = $("[data-test-id='date']").$(".input_invalid").$(".input__sub");
+        errorMsg.shouldHave(exactText("Неверно введена дата"));
     }
 
     @Test
-    void shouldNotSubmitIfEmptyName() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfEmptyName() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='name']").$(".input__sub").getText();
-        assertEquals("Поле обязательно для заполнения", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='name']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Поле обязательно для заполнения"));
     }
 
     @Test
-    void shouldNotSubmitIfEmptyPhone() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfEmptyPhone() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
+        $("[name='name']").setValue(submitData.getName());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='phone']").$(".input__sub").getText();
-        assertEquals("Поле обязательно для заполнения", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='phone']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Поле обязательно для заполнения"));
     }
 
     @Test
-    void shouldNotSubmitIfAgreementNotChecked() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfAgreementNotChecked() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='agreement']").getText();
-        assertEquals("Я соглашаюсь с условиями обработки и использования моих персональных данных", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='agreement']");
+        errorMsg.shouldHave(exactText("Я соглашаюсь с условиями обработки и использования моих персональных данных"));
     }
 
     @Test
     void shouldNotSubmitIfInaccessibleCity() {
         $("[data-test-id='city'] .input__control").setValue("Колыма");
         inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='city']").$(".input__sub").getText();
-        assertEquals("Доставка в выбранный город недоступна", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='city']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Доставка в выбранный город недоступна"));
     }
 
     @Test
-    void shouldNotSubmitIfInaccessibleDate() {
+    void shouldNotSubmitIfInaccessibleDate() throws IOException, ParseException {
         LocalDate date = LocalDate.now();
         String formattedDate = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
         dateForm.setValue(formattedDate);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $("[data-test-id='date']").$(".input_invalid").$(".input__sub").getText();
-        assertEquals("Заказ на выбранную дату невозможен", text.trim());
+        SelenideElement errorMsg = $("[data-test-id='date']").$(".input_invalid").$(".input__sub");
+        errorMsg.shouldHave(exactText("Заказ на выбранную дату невозможен"));
     }
 
     @Test
-    void shouldNotSubmitIfPastDate() {
+    void shouldNotSubmitIfPastDate() throws IOException, ParseException {
         String pastDate = "01.01.2020";
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
         dateForm.setValue(pastDate);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $("[data-test-id='date']").$(".input_invalid").$(".input__sub").getText();
-        assertEquals("Заказ на выбранную дату невозможен", text.trim());
+        SelenideElement errorMsg = $("[data-test-id='date']").$(".input_invalid").$(".input__sub");
+        errorMsg.shouldHave(exactText("Заказ на выбранную дату невозможен"));
     }
 
     @Test
-    void shouldNotSubmitIfLatinName() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfLatinName() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
         $("[name='name']").setValue("Vasiliy Petrov");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='name']").$(".input__sub").getText();
-        assertEquals("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='name']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
     }
 
     @Test
-    void shouldNotSubmitIfNumeralsInName() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfNumeralsInName() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
         $("[name='name']").setValue("Василий Петр0в");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='name']").$(".input__sub").getText();
-        assertEquals("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы.", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='name']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Имя и Фамилия указаные неверно. Допустимы только русские буквы, пробелы и дефисы."));
     }
 
     @Test
-    void shouldNotSubmitIfPhoneWithoutPlus() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldNotSubmitIfIncompletePhone() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("89067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue("+");
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='phone']").$(".input__sub").getText();
-        assertEquals("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.", text.trim());
+        SelenideElement errorMsg = $(".input_invalid[data-test-id='phone']").$(".input__sub");
+        errorMsg.shouldHave(exactText("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678."));
     }
 
     @Test
-    void shouldNotSubmitIfLettersInPhone() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
-        inputDate(dateForm);
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79О67778899");
-        $(".checkbox__box").click();
-        $(".button__content").click();
-        String text = $(".input_invalid[data-test-id='phone']").$(".input__sub").getText();
-        assertEquals("Телефон указан неверно. Должно быть 11 цифр, например, +79012345678.", text.trim());
-    }
-
-    /* ЗАДАНИЕ №2 */
-
-    @Test
-    void shouldChooseCityByDropDownList() {
-        $("[data-test-id='city'] .input__control").setValue("Мо");
-        $(".menu").shouldBe(Condition.visible).$(withText("Москва")).click();
+    void shouldChooseCityByDropDownList() throws IOException, ParseException {
+        String city = generateCity();
+        String cityFirstLetters = city.substring(0,2);
+        $("[data-test-id='city'] .input__control").setValue(cityFirstLetters);
+        $(".menu").shouldBe(Condition.visible).$(withText(city)).click();
         inputDate(dateForm);
         String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 ).getText();
-        assertEquals("Встреча успешно запланирована на " + selectedDate, text.trim());
+        SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
+        successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
     }
 
     /* В тесте реализован универсальный алгоритм поиска даты доставки через форму с календарем
      *  Он умеет переключать месяц пока не найдёт нужную дату */
     @Test
-    void shouldChooseDateByCalendar() {
-        $("[data-test-id='city'] .input__control").setValue("Москва");
+    void shouldChooseDateByCalendar() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
         $(".icon_name_calendar").click();
         String nextAvailableDayDataDayStringValue = $(".calendar__day[data-day]").getAttribute("data-day");
         long nextAvailableDayDataDayLongValue = Long.parseLong(nextAvailableDayDataDayStringValue);
@@ -236,11 +225,11 @@ public class AppCardDeliveryV2Test {
             }
         } while (!isFound);
         String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
-        $("[name='name']").setValue("Василий Петров");
-        $("[name='phone']").setValue("+79067778899");
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        String text = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 ).getText();
-        assertEquals("Встреча успешно запланирована на " + selectedDate, text.trim());
+        SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
+        successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
     }
 }
