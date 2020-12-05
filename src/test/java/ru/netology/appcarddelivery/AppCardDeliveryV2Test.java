@@ -16,7 +16,6 @@ import java.time.format.DateTimeFormatter;
 import static com.codeborne.selenide.Condition.exactText;
 import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openqa.selenium.Keys.chord;
 import static ru.netology.util.DataGenerator.*;
 
@@ -24,12 +23,11 @@ public class AppCardDeliveryV2Test {
 
     SubmitByNamePhone submitData = generateByNamePhone();
 
-    private SelenideElement dateForm = $("[data-test-id='date'] .input__control");
+    private final SelenideElement dateForm = $("[data-test-id='date'] .input__control");
 
-    private SelenideElement inputDate(SelenideElement item) {
+    private void inputDate(SelenideElement item) {
         item.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
         item.setValue(generateDate());
-        return item;
     }
 
     @BeforeEach
@@ -229,6 +227,22 @@ public class AppCardDeliveryV2Test {
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
+        SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
+        successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
+    }
+
+    @Test
+    void shouldReschedule() throws IOException, ParseException {
+        $("[data-test-id='city'] .input__control").setValue(generateCity());
+        inputDate(dateForm);
+        $("[name='name']").setValue(submitData.getName());
+        $("[name='phone']").setValue(submitData.getPhone());
+        $(".checkbox__box").click();
+        $(".button__content").click();
+        inputDate((dateForm));
+        String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
+        $(".button__content").click();
+        $$(".button__content").last().click();
         SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
         successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
     }
