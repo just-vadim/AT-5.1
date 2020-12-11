@@ -3,13 +3,11 @@ package ru.netology.appcarddelivery;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import org.json.simple.parser.ParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
-import ru.netology.util.SubmitByNamePhone;
+import ru.netology.util.SubmitByCityNamePhone;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -21,13 +19,13 @@ import static ru.netology.util.DataGenerator.*;
 
 public class AppCardDeliveryV2Test {
 
-    SubmitByNamePhone submitData = generateByNamePhone();
+    SubmitByCityNamePhone submitData = generateByCityNamePhone();
 
     private final SelenideElement dateForm = $("[data-test-id='date'] .input__control");
 
-    private void inputDate(SelenideElement item) {
+    private void inputDate(SelenideElement item, String date) {
         item.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
-        item.setValue(generateDate());
+        item.setValue(date);
     }
 
     @BeforeEach
@@ -36,10 +34,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldSubmitRequest() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
-        String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
+    void shouldSubmitRequest() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -50,7 +48,8 @@ public class AppCardDeliveryV2Test {
 
     @Test
     void shouldNotSubmitIfEmptyCity() {
-        inputDate(dateForm);
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -60,8 +59,8 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfEmptyDate() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
+    void shouldNotSubmitIfEmptyDate() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
         dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
@@ -72,9 +71,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfEmptyName() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfEmptyName() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
@@ -83,9 +83,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfEmptyPhone() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfEmptyPhone() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $(".checkbox__box").click();
         $(".button__content").click();
@@ -94,9 +95,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfAgreementNotChecked() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfAgreementNotChecked() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".button__content").click();
@@ -107,7 +109,8 @@ public class AppCardDeliveryV2Test {
     @Test
     void shouldNotSubmitIfInaccessibleCity() {
         $("[data-test-id='city'] .input__control").setValue("Колыма");
-        inputDate(dateForm);
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -117,12 +120,11 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfInaccessibleDate() throws IOException, ParseException {
-        LocalDate date = LocalDate.now();
-        String formattedDate = date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
-        dateForm.setValue(formattedDate);
+    void shouldNotSubmitIfInaccessibleDate() {
+        LocalDate currentDate = LocalDate.now();
+        String formattedCurrentDate = currentDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        inputDate(dateForm, formattedCurrentDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -132,11 +134,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfPastDate() throws IOException, ParseException {
+    void shouldNotSubmitIfPastDate() {
         String pastDate = "01.01.2020";
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        dateForm.sendKeys(chord(Keys.CONTROL, "a") + Keys.DELETE);
-        dateForm.setValue(pastDate);
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        inputDate(dateForm, pastDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -146,9 +147,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfLatinName() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfLatinName() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue("Vasiliy Petrov");
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -158,9 +160,10 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfNumeralsInName() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfNumeralsInName() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue("Василий Петр0в");
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -170,11 +173,12 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldNotSubmitIfIncompletePhone() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldNotSubmitIfIncompletePhone() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
-        $("[name='phone']").setValue("+");
+        $("[name='phone']").setValue(generateInvalidPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
         SelenideElement errorMsg = $(".input_invalid[data-test-id='phone']").$(".input__sub");
@@ -182,13 +186,13 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldChooseCityByDropDownList() throws IOException, ParseException {
-        String city = generateCity();
+    void shouldChooseCityByDropDownList() {
+        String city = submitData.getCity();
         String cityFirstLetters = city.substring(0,2);
         $("[data-test-id='city'] .input__control").setValue(cityFirstLetters);
         $(".menu").shouldBe(Condition.visible).$(withText(city)).click();
-        inputDate(dateForm);
-        String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
@@ -200,8 +204,8 @@ public class AppCardDeliveryV2Test {
     /* В тесте реализован универсальный алгоритм поиска даты доставки через форму с календарем
      *  Он умеет переключать месяц пока не найдёт нужную дату */
     @Test
-    void shouldChooseDateByCalendar() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
+    void shouldChooseDateByCalendar() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
         $(".icon_name_calendar").click();
         String nextAvailableDayDataDayStringValue = $(".calendar__day[data-day]").getAttribute("data-day");
         long nextAvailableDayDataDayLongValue = Long.parseLong(nextAvailableDayDataDayStringValue);
@@ -232,17 +236,32 @@ public class AppCardDeliveryV2Test {
     }
 
     @Test
-    void shouldReschedule() throws IOException, ParseException {
-        $("[data-test-id='city'] .input__control").setValue(generateCity());
-        inputDate(dateForm);
+    void shouldReschedule() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
         $("[name='name']").setValue(submitData.getName());
         $("[name='phone']").setValue(submitData.getPhone());
         $(".checkbox__box").click();
         $(".button__content").click();
-        inputDate((dateForm));
-        String selectedDate = $("[data-test-id='date'] .input__control").getAttribute("value");
+        String newSelectedDate = generateDate();
+        inputDate(dateForm, newSelectedDate);
         $(".button__content").click();
         $$(".button__content").last().click();
+        SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
+        successMsg.shouldHave(exactText("Встреча успешно запланирована на " + newSelectedDate));
+    }
+
+    /*Тест на проверку, что буква "ё" в имени обрабатывается корректно */
+    @Test
+    void shouldSubmitWithRussianLetterYoInName() {
+        $("[data-test-id='city'] .input__control").setValue(submitData.getCity());
+        String selectedDate = generateDate();
+        inputDate(dateForm, selectedDate);
+        $("[name='name']").setValue(generateNameWithLetterYo());
+        $("[name='phone']").setValue(submitData.getPhone());
+        $(".checkbox__box").click();
+        $(".button__content").click();
         SelenideElement successMsg = $(withText("Встреча успешно")).waitUntil(Condition.visible, 15000 );
         successMsg.shouldHave(exactText("Встреча успешно запланирована на " + selectedDate));
     }
