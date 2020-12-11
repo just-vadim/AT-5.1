@@ -1,13 +1,15 @@
 package ru.netology.util;
 
-public class SubmitByNamePhone {
+public class SubmitByNamePhoneCity {
 
     private final String name;
     private final String phone;
+    private final String city;
 
-    public SubmitByNamePhone(String name, String phone) {
+    public SubmitByNamePhoneCity(String name, String phone, String city) {
         this.name = name;
         this.phone = phone;
+        this.city = city;
     }
 
     public String getName() {
@@ -16,5 +18,9 @@ public class SubmitByNamePhone {
 
     public String getPhone() {
         return phone;
+    }
+
+    public String getCity() {
+        return city;
     }
 }
